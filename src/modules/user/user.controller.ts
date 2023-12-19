@@ -19,8 +19,6 @@ export async function createUser(
         },
     });
 
-
-
     if (user) {
         return reply.code(401).send({
             message: "User already exists with this email",
@@ -40,4 +38,52 @@ export async function createUser(
     } catch (e) {
         return reply.code(500).send(e);
     }
+}
+
+export async function login(
+    req: FastifyRequest<{
+        Body: LoginInput;
+    }>,
+    reply: FastifyReply
+) {
+    const { email, password } = req.body;
+
+    const user = await prisma.users.findUnique({
+        where: {
+            email,
+        },
+    });
+
+    if (!user) {
+        return reply.code(401).send({
+            message: "User not found",
+        });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+        return reply.code(401).send({
+            message: "Incorrect password",
+        });
+    }
+
+    const payload = {
+        id: user.user_id,
+        email: user.email,
+    };
+
+    const accessToken = req.jwt.sign(payload, { expiresIn: "15m" }); // access token expires in 15 minutes
+
+    const refreshToken = req.jwt.sign(payload, { expiresIn: "7d" }); // refresh token expires in 7 days
+
+    reply.setCookie("refresh_token", refreshToken, {
+        path: "/",
+        httpOnly: true,
+    });
+
+    return reply.code(200).send({
+        message: "logged in",
+        access_token: accessToken,
+    });
 }

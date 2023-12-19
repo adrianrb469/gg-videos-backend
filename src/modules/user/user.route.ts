@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { $ref } from "./user.schema";
-import { createUser } from "./user.controller";
+import { createUser, login } from "./user.controller";
 
 export async function userRoutes(app: FastifyInstance) {
     app.get("/", async (req: FastifyRequest, res: FastifyReply) => {
@@ -30,7 +30,17 @@ export async function userRoutes(app: FastifyInstance) {
                 },
             },
         },
-        () => {}
+        login
+    );
+
+    app.get(
+        "/me",
+        {
+            preHandler: app.authenticate,
+        },
+        () => {
+            return { message: "me" };
+        }
     );
 
     app.delete("/logout", () => {});

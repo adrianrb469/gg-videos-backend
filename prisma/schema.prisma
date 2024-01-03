@@ -23,5 +23,6 @@ model submissions {
   rating       Int      @db.Integer
   seen        Boolean  @default(false)
   accepted    Boolean  @default(false)
+  status     Int     @default(0)
 
 }

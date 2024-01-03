@@ -7,11 +7,14 @@ import fCookie from "@fastify/cookie";
 import fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { authRoutes } from "./modules/auth/auth.route";
 import { uploadRoutes } from "./modules/upload/upload.route";
+import { submissionRoutes } from "./modules/submission/submission.route";
 
 const app = Fastify({ logger: true });
 
+const CLIENT_URL = process.env.CLIENT_URL || "http://127.0.0.1:4173";
+
 app.register(cors, {
-    origin: "http://127.0.0.1:5173",
+    origin: CLIENT_URL,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 });
@@ -28,7 +31,7 @@ app.register(fjwt, {
 app.options("/upload/submission", async (request, reply) => {
     reply
         .code(204)
-        .header("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+        .header("Access-Control-Allow-Origin", CLIENT_URL)
         .header("Access-Control-Allow-Methods", "POST")
         .header("Access-Control-Allow-Headers", "Content-Type")
         .send();
@@ -48,6 +51,7 @@ app.register(fCookie, {
 app.register(userRoutes, { prefix: "/users" });
 app.register(authRoutes, { prefix: "/auth" });
 app.register(uploadRoutes, { prefix: "/upload" });
+app.register(submissionRoutes, { prefix: "/submissions" });
 
 app.decorate("authenticate", async (req: FastifyRequest, res: FastifyReply) => {
     try {

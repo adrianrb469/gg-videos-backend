@@ -1,16 +1,37 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import { userRoutes } from "./modules/user/user.route";
 import { userSchemas } from "./modules/user/user.schema";
 import fjwt, { FastifyJWT } from "@fastify/jwt";
 import fCookie from "@fastify/cookie";
-import { FastifyReply, FastifyRequest } from "fastify";
+import fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { authRoutes } from "./modules/auth/auth.route";
+import { uploadRoutes } from "./modules/upload/upload.route";
 
 const app = Fastify({ logger: true });
+
+app.register(cors, {
+    origin: "http://127.0.0.1:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+});
+
+app.register(require("@fastify/multipart"), {
+    attachFieldsToBody: "true",
+});
 
 //jwt
 app.register(fjwt, {
     secret: process.env.ACCESS_TOKEN as string,
+});
+
+app.options("/upload/submission", async (request, reply) => {
+    reply
+        .code(204)
+        .header("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+        .header("Access-Control-Allow-Methods", "POST")
+        .header("Access-Control-Allow-Headers", "Content-Type")
+        .send();
 });
 
 app.addHook("preHandler", (req, res, next) => {
@@ -26,12 +47,13 @@ app.register(fCookie, {
 
 app.register(userRoutes, { prefix: "/users" });
 app.register(authRoutes, { prefix: "/auth" });
+app.register(uploadRoutes, { prefix: "/upload" });
 
 app.decorate("authenticate", async (req: FastifyRequest, res: FastifyReply) => {
     try {
         await req.jwtVerify();
     } catch (e) {
-        res.status(401).send({ message: "Authentication required" });
+        res.status(403).send({ message: "Authentication required" });
     }
 });
 
@@ -45,10 +67,6 @@ async function main() {
         host: "0.0.0.0",
     });
 }
-
-app.get("/healthcheck", (req, res) => {
-    res.send({ message: "Success" });
-});
 
 // Shutsdown the server gracefully
 ["SIGINT", "SIGTERM"].forEach((signal) => {

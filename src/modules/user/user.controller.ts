@@ -46,6 +46,9 @@ export async function login(
     }>,
     reply: FastifyReply
 ) {
+    // log if they have a cookie of refresh token
+    console.log("i has cookies", req.cookies);
+
     const { email, password } = req.body;
 
     const user = await prisma.users.findUnique({
@@ -75,15 +78,23 @@ export async function login(
 
     const accessToken = req.jwt.sign(payload, { expiresIn: "15m" }); // access token expires in 15 minutes
 
-    const refreshToken = req.jwt.sign(payload, { expiresIn: "7d" }); // refresh token expires in 7 days
+    const refreshToken = req.jwt.sign(payload, { expiresIn: "3d" }); // refresh token expires in 7 days
 
     reply.setCookie("refresh_token", refreshToken, {
         path: "/",
         httpOnly: true,
+        sameSite: "none",
+        // secure: true,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     return reply.code(200).send({
-        message: "logged in",
+        user: {
+            email: user.email,
+            username: user.username,
+            user_id: user.user_id,
+            is_admin: user.is_admin,
+        },
         access_token: accessToken,
     });
 }

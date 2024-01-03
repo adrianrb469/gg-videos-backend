@@ -28,12 +28,24 @@ export async function refresh(req: FastifyRequest, res: FastifyReply) {
         return res.code(401).send({ message: "User not found" });
     }
 
-    const newAccessToken = req.jwt.sign({
-        id: user.user_id,
-        email: user.email,
-    });
+    const newAccessToken = req.jwt.sign(
+        {
+            id: user.user_id,
+            email: user.email,
+        },
+        { expiresIn: "15m" }
+    );
+    console.log("i has cookies", req.cookies);
 
-    return res.code(200).send({ access_token: newAccessToken });
+    return res.code(200).send({
+        user: {
+            email: user.email,
+            username: user.username,
+            user_id: user.user_id,
+            is_admin: user.is_admin,
+        },
+        access_token: newAccessToken,
+    });
 }
 
 export async function logout(req: FastifyRequest, res: FastifyReply) {

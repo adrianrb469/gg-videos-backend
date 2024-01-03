@@ -39,11 +39,7 @@ export async function userRoutes(app: FastifyInstance) {
             preHandler: app.authenticate,
         },
         () => {
-            return { message: "me" };
+            return { message: "this is a private route!" };
         }
     );
-
-    app.delete("/logout", () => {});
-
-    app.log.info("user routes registered");
 }

@@ -6,6 +6,6 @@ export async function authRoutes(app: FastifyInstance) {
         res.send({ message: "Success" });
     });
 
-    app.post("/refresh", refresh);
+    app.get("/refresh", refresh);
     app.post("/logout", logout);
 }

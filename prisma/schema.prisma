@@ -14,3 +14,14 @@ model users {
   password String   @db.VarChar(255)
   is_admin Boolean?
 }
+
+model submissions {
+  submission_id Int      @id @default(autoincrement())
+  email         String   @db.VarChar(75)
+  review       String   @db.Text
+  video_url    String   @db.VarChar(255)
+  rating       Int      @db.Integer
+  seen        Boolean  @default(false)
+  accepted    Boolean  @default(false)
+
+}
